@@ -26,6 +26,10 @@ require(dplyr)
 if (!requireNamespace("stringr", quietly=TRUE)) install.packages("stringr")
 require(stringr)
 
+if (!requireNamespace("zoo", quietly=TRUE)) install.packages("zoo")
+require(zoo)
+
+
 #orient to correct working directory, just to be sure
 here::i_am("PGLMT_scripts/BMPs_Cleanup.R")
 
@@ -207,3 +211,54 @@ ER_PGC_cw <- read.csv("ER_PGC_Crosswalk.csv")
 ER_PGC <- gather(ER_PGC_cw, rm, ER_Code, ER_Code:ER_Code.6)
 ER_PGC <- ER_PGC[complete.cases(ER_PGC),] #remove all rows with mising data 
 ER_PGC <- subset(ER_PGC, select = -c(rm))
+
+#join ER activity descriptions to the PGC activities; first create separate list of ER activities plus codes
+ERmat_sheets
+n <- 1 # enter its location in the list (just one of the agency sheets, to get the full list of activities)
+ER_mat_table <- read.xlsx(xlsxFile=ERmat, sheet=ERmat_sheets[n], skipEmptyRows=FALSE, rowNames=FALSE)
+names(ER_mat_table)
+
+keepcols <- c("Major.Category","Secondary.Categories","Tertiary.Categories","New.Code")
+ER_activity_table <- ER_mat_table[,(names(ER_mat_table) %in% keepcols)]
+names(ER_activity_table)[4] <- "ER_Code"
+
+ER_activity_table$Major.Category #lots of NAs because the matrix wasn't filled
+ER_activity_table$Major.Categories <- na.locf(ER_activity_table$Major.Category) #fill NAs with most recent previous non-NA value
+ER_activity_table <- subset(ER_activity_table, select = -c(Major.Category))
+ER_activity_table <- ER_activity_table[,c(4,1,2,3)] #and reorder so major category column is back where it belongs
+
+
+write.csv(ER_activity_table, file="ER_activities_table.csv")
+
+ER_PGC_Joined <- ER_PGC %>% left_join(ER_activity_table, by=c("ER_Code"))
+names(ER_PGC_Joined)
+
+write.csv(ER_PGC_Joined, file="ER_PGC_ActCodes_cw.csv")
+
+############################################################################################
+############################################################################################
+
+##################################################
+## 3. Clean up Species to ER Guild ID crosswalk ##
+##################################################
+
+###########################################################################################
+
+#read in PGC-ER activity crosswalk files
+Spp_Guild_cw <- read.csv("Species_x_ER_GuildCodes.csv")
+head(Spp_Guild_cw)
+
+#looks good, no need to do anything else with this right now.
+
+###########################################################################################
+###########################################################################################
+
+#####################
+## 4. Test problem ##
+#####################
+
+#bring in example species list from a CMU
+
+Spp_list <- read.csv("SppTable_Test_SGL051_CMU1.csv")
+
+#
