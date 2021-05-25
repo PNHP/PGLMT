@@ -224,8 +224,9 @@ names(ER_activity_table)[4] <- "ER_Code"
 
 ER_activity_table$Major.Category #lots of NAs because the matrix wasn't filled
 ER_activity_table$Major.Categories <- na.locf(ER_activity_table$Major.Category) #fill NAs with most recent previous non-NA value
-ER_activity_table <- subset(ER_activity_table, select = -c(Major.Category))
-ER_activity_table <- ER_activity_table[,c(4,1,2,3)] #and reorder so major category column is back where it belongs
+ER_activity_table$Secondary.Category <- na.locf(ER_activity_table$Secondary.Categories)
+ER_activity_table <- subset(ER_activity_table, select = -c(Major.Category,Secondary.Categories))
+ER_activity_table <- ER_activity_table[,c(2,3,4,1)] #and reorder so major category column is back where it belongs
 
 
 write.csv(ER_activity_table, file="ER_activities_table.csv")
@@ -234,6 +235,9 @@ ER_PGC_Joined <- ER_PGC %>% left_join(ER_activity_table, by=c("ER_Code"))
 names(ER_PGC_Joined)
 
 write.csv(ER_PGC_Joined, file="ER_PGC_ActCodes_cw.csv")
+
+#by hand, I added a PGLMT grouped-category code. Read .csv back in to access that, which you'll want for the reporting BMPs back out by activity category
+ER_PGC_Joined <- read.csv(file="ER_PGC_ActCodes_cw.csv")
 
 ############################################################################################
 ############################################################################################
@@ -248,7 +252,9 @@ write.csv(ER_PGC_Joined, file="ER_PGC_ActCodes_cw.csv")
 Spp_Guild_cw <- read.csv("Species_x_ER_GuildCodes.csv")
 head(Spp_Guild_cw)
 
-#looks good, no need to do anything else with this right now.
+#set matrix code as a factor
+Spp_Guild_cw$Matrix.Code <- as.factor(Spp_Guild_cw$Matrix.Code) 
+
 
 ###########################################################################################
 ###########################################################################################
@@ -261,4 +267,56 @@ head(Spp_Guild_cw)
 
 Spp_list <- read.csv("SppTable_Test_SGL051_CMU1.csv")
 
-#
+
+##########
+## this is the wrong file! Use ER_GuildxAction2
+#the bmp x spp guild list
+ER_BMPs_bycode
+
+ER_BMPs_bycode$ER_BMP_Code <- as.factor(ER_BMPs_bycode$ER_BMP_Code) #recode as a factor for future use
+
+#join the ER guild code, w/ ELSUBID as key
+
+Spp_table<- left_join(Spp_list, Spp_Guild_cw[c("ELSUBID","Matrix.Code","AGENCY")], by="ELSUBID")
+#in this example, note that two of the species don't have ER codes, because they are not in ER, and get an NA
+
+#reduced table for joining to the ER categories
+Spp_tablej <- Spp_table[c("ELSUBID","SNAME","SCOMNAME","Matrix.Code","AGENCY")]
+
+#remove duplicate rows (for spp which might have multiple EOs at the site)
+Spp_tablej <- Spp_tablej %>% distinct()
+
+#remove any elements that are not in ER, for this next part
+Spp_tableER <- Spp_tablej[complete.cases(Spp_tablej),]
+
+#pull together the table of ER codes which are matched to any of the PGC activity codes 
+names(Spp_tableER)[4] <- "Guild" #rename to match the guild x ER Code table
+
+ER_cats <- ER_PGC_Joined[c("ER_Code","PGLMT_Grouping")] %>% distinct() #get a list of just the unique ER code x PGLMT reporting category combinations
+ER_cats$PGLMT_Grouping <- as.factor(ER_cats$PGLMT_Grouping) #recode PGLMT category as a factor
+ER_cats$ER_BMP_Code <- as.factor(ER_cats$ER_Code) #also recode as a factor
+
+ER_catsl <- split(ER_cats[c("ER_Code")], ER_cats$PGLMT_Grouping)#split into lists of the ER codes under each PGLMT activity category
+
+GuildxERCode <- rep(ER_catsl, length(Spp_tableER$Guild)) #replicate list of ER codes, so that each guild has its own list
+
+#create a vector that assigns each unique species matrix code to the full suite of ER code tables
+ERcode_v <- rep(Spp_tableER$Guild, each=length(ER_catsl))
+
+#glue the matrix code into each list, so that we can create tables of guilde-specific bmps for each ER code
+for (i in 1:length(GuildxERCode)){
+  for (j in 1: length(ERcode_v)){
+    GuildxERCode[[i]]$Guild <- ERcode_v[j]   
+  }
+}
+
+#now take all the lists of ER codes by species and extract the BMP responses--AM, CM, and Qs
+for (i in 1:length(GuildxERCode)){
+  GuildxERCode[[i]] <- left_join(GuildxERCode[[i]], ER_GuildxAction2, by=c("ER_Code", "Guild"="Guide_ID"))
+}
+
+GuildxERCode[[1]] #test to make sure it looks like it is supposed to (it does)
+
+
+
+
