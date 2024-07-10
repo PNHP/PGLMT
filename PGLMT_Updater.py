@@ -32,7 +32,7 @@ Author:     Molly Moore
 Created:    2024-05-10
 
 Updated:
-"""""
+"""
 
 # import system modules
 import os
@@ -42,6 +42,7 @@ from arcgis.gis import GIS
 from arcgis.features import FeatureLayer
 from arcgis.features import FeatureSet
 import pandas as pd
+import csv
 
 # load gis credentials from OS environment variables - need to set up Windows environment variables in order for this to work - see information in the script header for instructions
 wpc_gis_username = os.environ.get("wpc_portal_username")
@@ -54,25 +55,31 @@ workspace = r"C://Users//mmoore//AppData//Roaming//Esri//ArcGISPro//Favorites//P
 cpp_core = os.path.join(workspace,r"PNHP.DBO.CPPConservationPlanningPolygons//PNHP.DBO.CPP_Core")
 biotics_et = os.path.join(workspace,r"PNHP.DBO.ET")
 sgl_url = r"https://pgcmaps.pa.gov/arcgis/rest/services/PGC/NEW_PUBLIC/MapServer/17" # this is directly from the PGC public portal so should be most up to date SGLs and what we will use as the spatial layer in the Dashboard/Experience
-pglmt_core_url = r"https://gis.waterlandlife.org/server/rest/services/Hosted/PGLMT/FeatureServer/0"
-pglmt_et_url = r"https://gis.waterlandlife.org/server/rest/services/Hosted/PGLMT/FeatureServer/1"
-BMP_matrix = r"https://gis.waterlandlife.org/server/rest/services/Hosted/PGLMT/FeatureServer/4"
-species_habitats = r"https://gis.waterlandlife.org/server/rest/services/Hosted/PGLMT/FeatureServer/2"
-rank_codes = r"https://gis.waterlandlife.org/server/rest/services/Hosted/PGLMT/FeatureServer/11"
+pglmt_core_url = r"https://gis.waterlandlife.org/server/rest/services/PGLMT/PGLMT_Edit/FeatureServer/0"
+pglmt_et_url = r"https://gis.waterlandlife.org/server/rest/services/PGLMT/PGLMT_Edit/FeatureServer/9"
+BMP_matrix = r"https://gis.waterlandlife.org/server/rest/services/PGLMT/PGLMT_Edit/FeatureServer/1"
+species_habitats = r"https://gis.waterlandlife.org/server/rest/services/PGLMT/PGLMT_Edit/FeatureServer/10"
+rank_codes = r"https://gis.waterlandlife.org/server/rest/services/PGLMT/PGLMT_Edit/FeatureServer/11"
+BMP_summary = r"https://gis.waterlandlife.org/server/rest/services/PGLMT/PGLMT/FeatureServer/2"
 
 # get feature layers from rest urls using the arcgis package
 core_flayer = FeatureLayer(pglmt_core_url)
 et_flayer = FeatureLayer(pglmt_et_url)
 
 # make table view of only state and federal listed species from Biotics ET
-state_listed_clause = "USESA = 'LE' OR USESA = 'LT' OR SPROT = 'PR' OR SPROT = 'PV' OR SPROT = 'TU' OR SPROT = 'PE' OR SPROT = 'PT' OR SPROT = 'PX' OR SPROT = 'PC'" # this is the query for all state and federal listed species codes
+state_listed_clause = "USESA = 'LE' OR USESA = 'LT' OR SPROT = 'PR' OR SPROT = 'PV' OR SPROT = 'TU' OR SPROT = 'PE' OR SPROT = 'PT' OR SPROT = 'PX' OR SPROT = 'PC'" # this is the query for all state and federal listed species codes, we are including Timber Rattlesnake, Bald Eagle, and Peregrine Falcon as well even though they are delisted
 et_lyr = arcpy.MakeTableView_management(biotics_et,"et_lyr",state_listed_clause)
 
 # create list of ELSUBIDs for state and federal listed species
 state_listed_elsubids = sorted({row[0] for row in arcpy.da.SearchCursor(et_lyr,"ELSUBID")})
+# add in Timber Rattlesnake, Bald Eagle, and Peregrine Falcon because we are including them even though they are not technically state listed
+state_listed_elsubids.extend((11556,10939,10952))
 
-# create feature layer of CPP cores filtered by those that are state listed species
-cpp_where_clause = "ELSUBID IN {0}".format(tuple(state_listed_elsubids)) # this is the query for CPPs whose ELSUBIDs are in the list created for state/federal listed species
+# create feature layer of CPP cores filtered by qualifying:
+# CPPs that are a state listed species - exclude NOT APPROVED CPPs
+# exclude tricolored bat (11453) CPPs that are approved (because we are replacing with the HCP model from USFWS
+# include IBAT and tricolored HCP layers (need to put a special clause in for these because they are listed as Not Approved in the CPP layer.
+cpp_where_clause = "(ELSUBID IN {0} AND Status <> 'n' AND ELSUBID <> 11453) OR (ELSUBID = 11449 AND SpecID = 'ER_IBAT_HCP_SUMMER_SGL_ONLY') OR (ELSUBID = 11453 AND SpecID = 'Mammals_Tricolored_Bat_HCP_2024')".format(tuple(state_listed_elsubids)) # this is the query for CPPs whose ELSUBIDs are in the list created for state/federal listed species
 cpp_core_lyr = arcpy.MakeFeatureLayer_management(cpp_core,"cpp_core_lyr",cpp_where_clause)
 
 # create SGL feature layer from PGC rest endpoint
@@ -98,18 +105,22 @@ cpp_core_clip = arcpy.analysis.PairwiseClip(cpp_core_lyr, sgl_buffer, os.path.jo
 core_flayer.delete_features(where="objectid > 0")
 
 # create pandas spatial dataframe from CPP clip layer that we will use for updates
-sdf = pd.DataFrame.spatial.from_featureclass(os.path.join("memory","cpp_core_clip"))
-# deal with field name mismatches - if we change field names in feature service, then we will take this out
-sdf.rename(columns={'ELSUBID':'elsubid', 'EO_ID':'eo_id', 'DrawnDate':'drawndate', 'BioticsExportDate':'bioticsexportdate', 'SpecID':'specid'}, inplace=True)
-# limit fields in dataframe to reduce errors in fields that we aren't appending anyway
-sdf = sdf[['elsubid','eo_id','drawndate','bioticsexportdate','specid','SHAPE']]
-# fix null records in date field
-sdf["bioticsexportdate"].fillna("01/01/1899", inplace = True)
-# convert dataframe to feature set
-fs = sdf.spatial.to_featureset()
+# sdf = pd.DataFrame.spatial.from_featureclass(os.path.join("memory","cpp_core_clip"))
+# # deal with field name mismatches - if we change field names in feature service, then we will take this out - WE NO LONGER NEED TO DO THIS BECAUSE THE FIELD NAMES CHANGED IN THE FEATURE SERVICE AND NOW MATCH THE CPP LAYER
+# # sdf.rename(columns={'ELSUBID':'elsubid', 'EO_ID':'eo_id', 'DrawnDate':'drawndate', 'BioticsExportDate':'bioticsexportdate', 'SpecID':'specid'}, inplace=True)
+# # limit fields in dataframe to reduce errors in fields that we aren't appending anyway
+# sdf = sdf[['ELSUBID','EO_ID','DrawnDate','BioticsExportDate','SpecID','SHAPE']]
+# sdf = sdf[['ELSUBID','EO_ID','DrawnDate','BioticsExportDate','SpecID']]
+# # fix null records in date field
+# sdf["BioticsExportDate"].fillna("01/01/1899", inplace = True)
+# # convert dataframe to feature set
+# fs = sdf.spatial.to_featureset()
 
 # append selected state listed CPPs to PGLMT CPP layer
-core_flayer.edit_features(adds = fs)
+# core_flayer.edit_features(adds = fs)
+
+# for right now, we are just using the arcpy append tool directly into the rest endpoint... the other works more quickly, but the previous method of using the edit_features tool no longer works with the new feature service on Portal - it has something to do with the SHAPE because the attributes will append without the shape during testing.
+arcpy.Append_management(os.path.join("memory","cpp_core_clip"),pglmt_core_url,"NO_TEST")
 #########
 #########
 
@@ -128,11 +139,11 @@ et_flayer.delete_features(where="objectid > 0")
 # create pandas dataframe from ET view
 fields = ['ELSUBID', 'ELCODE', 'SNAME', 'SCOMNAME', 'GRANK', 'SRANK', 'USESA', 'SPROT', 'SGCN', 'SENSITV_SP', 'EXPT_DATE']
 sdf = pd.DataFrame((row for row in arcpy.da.SearchCursor("et_view", fields)), columns=fields)
-# deal with field name mismatches - if we change field names in feature service, then we will take this out
-sdf.rename(columns={'ELSUBID':'elsubid', 'ELCODE':'elcode', 'SNAME':'sname', 'SCOMNAME':'scomname', 'GRANK':'grank', 'SRANK':'srank', 'USESA':'usesa', 'SPROT':'sprot', 'SGCN':'sgcn', 'SENSITV_SP':'sensitv_sp', 'EXPT_DATE':'expt_date'}, inplace=True)
-sdf = sdf[['elsubid','elcode','sname','scomname','grank','srank','usesa','sprot','sgcn','sensitv_sp','expt_date']]
+# deal with field name mismatches - if we change field names in feature service, then we will take this out - WE NO LONGER NEED TO DO THIS BECAUSE THE FIELD NAMES CHANGED IN THE FEATURE SERVICE AND MATCH THE ET - HOORAY!
+#sdf.rename(columns={'ELSUBID':'elsubid', 'ELCODE':'elcode', 'SNAME':'sname', 'SCOMNAME':'scomname', 'GRANK':'grank', 'SRANK':'srank', 'USESA':'usesa', 'SPROT':'sprot', 'SGCN':'sgcn', 'SENSITV_SP':'sensitv_sp', 'EXPT_DATE':'expt_date'}, inplace=True)
+sdf = sdf[['ELSUBID','ELCODE','SNAME','SCOMNAME','GRANK','SRANK','USESA','SPROT','SGCN','SENSITV_SP','EXPT_DATE']]
 # convert text field to date field
-sdf['expt_date'] = pd.to_datetime(sdf['expt_date'])
+sdf['EXPT_DATE'] = pd.to_datetime(sdf['EXPT_DATE'])
 # convert dataframe to feature set
 fs = FeatureSet.from_dataframe(sdf)
 
@@ -177,8 +188,13 @@ rank_fields = ["grank","srank","usesa","sprot"]
 for field in rank_fields:
     with arcpy.da.UpdateCursor(pglmt_et_url,field) as cursor:
         for row in cursor:
-            if row[0] is None:
+            # create exception for usesa column because PE means something different for fed listings than state listings.
+            if field == "usesa" and row[0]=="PE":
+                row[0] = "Proposed Endangered"
+                cursor.updateRow(row)
+            elif row[0] is None:
                 row[0] = "No Status"
+                cursor.updateRow(row)
             else:
                 for k,v in rank_dict.items():
                     if k==row[0]:
@@ -190,7 +206,7 @@ yes_fields = ["sgcn","sensitv_sp"]
 for field in yes_fields:
     with arcpy.da.UpdateCursor(pglmt_et_url,field) as cursor:
         for row in cursor:
-            if row[0] is None or row[0] == "N":
+            if row[0] is None or row[0] == "N" or row[0] == '' or row[0] == ' ':
                 row[0] = "No"
                 cursor.updateRow(row)
             elif row[0] == "Y":
@@ -198,3 +214,52 @@ for field in yes_fields:
                 cursor.updateRow(row)
             else:
                 print("huh")
+
+#########
+#########
+# now we will check for elements that qualify for PGLMT, but need BMPs or BMP Summaries
+# create empty list to store missing values that will be written to .csv
+missing_values = []
+# create list of federally listed ELSUBIDs to check for federal BMPs for only these species
+fed_elsubids = sorted({row[0] for row in arcpy.da.SearchCursor(pglmt_et_url,["ELSUBID","USESA"], "USESA <>''")})
+# create lists of index values and description to put in missing values .csv
+field_index = [3,4,5,6,7,8,9]
+missing_value_header = ["BMP Matrix - Forestry", "BMP Matrix - Fire", "BMP Matrix - Ag", "BMP Matrix - WHI", "BMP Matrix - M_D", "Habitat Table - Taxa Group", "Habitat Table - Habitat"]
+# loop through list of fields to check for missing values in each column and add to the missing values list
+for index, val in zip(field_index, missing_value_header):
+    with arcpy.da.SearchCursor(pglmt_et_url,["ELSUBID","SNAME","SCOMNAME","Forestry","Fire","Ag","WHI","M_D","taxa_group","habitat"]) as cursor:
+        for row in cursor:
+            if row[index] is None:
+                tup = row[0], row[1], row[2], val
+                missing_values.append(tup)
+
+# if species is a federally listed species, check for missing values in BMP matrix and add to missing values .csv if it doesn't
+with arcpy.da.SearchCursor(pglmt_et_url,["ELSUBID","SNAME","SCOMNAME","Fed"]) as cursor:
+    for row in cursor:
+        if row[0] in fed_elsubids and row[3] is None:
+            tup = row[0], row[1], row[2], "BMP Matrix - Fed"
+            missing_values.append(tup)
+
+# create list of all ELSUBIDs in BMP summary table
+bmp_summary_elsubids = sorted({row[0] for row in arcpy.da.SearchCursor(BMP_summary,["ELSUBID"])})
+# loop through all PGLMT ELSUBIDs and make sure they have a match in the BMP summary table, if not add them to the missing values list
+for id in PGLMT_elsubids:
+    if id not in bmp_summary_elsubids:
+        with arcpy.da.SearchCursor(pglmt_et_url,["ELSUBID","SNAME","SCOMNAME"]) as cursor:
+            for row in cursor:
+                if row[0]== id:
+                    tup = row[0],row[1],row[2],"BMP Summary Missing"
+                    missing_values.append(tup)
+
+# create .csv of missing values
+with open(os.path.join(r"H:\\",'PGLMT_MissingValuesReport_'+time.strftime("%d%b%Y")+'.csv'), 'w', newline='') as csvfile:
+    csv_output = csv.writer(csvfile)
+    # write heading rows to .csv
+    csv_output.writerow(("ELSUBID", "SNAME", "SCOMNAME", "MISSING_VALUE"))
+    # write tuple rows to .csv
+    for value in missing_values:
+        csv_output.writerow(value)
+
+# open .csv
+os.startfile(os.path.join(r"H:/",'PGLMT_MissingValuesReport_'+time.strftime("%d%b%Y")+'.csv'))
+

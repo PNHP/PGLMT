@@ -1,4 +1,18 @@
-## BMP SUMMARY TABLE
+"""
+Name:       PGLMT - HTML Popup Formatting
+Purpose:    This HTML text can be used to format the web map popups for the PGLMT web map that will be used in PGLMT
+            Dashboard and/or Experience
+SETUP and LIMITATIONS:
+            1. The comments before each block of code identify which table popup where the code should be copied/pasted
+
+Author:     Molly Moore
+Created:    2024-05-30
+Updated:
+""""
+
+
+####################
+## BMP SUMMARY TABLE - paste into the BMP summary table popup as HTML text
 <figure>
     <figure style="float:left;width:100%;">
         <figure class="table">
@@ -46,6 +60,22 @@
                     </tr>
                     <tr>
                         <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
+                            <strong>Wildlife Habitat Improvement Impact</strong>
+                        </td>
+                        <td style="border:0.5px solid rgb(215, 215, 215);">
+                            {wildlife_habitat_improvement_im}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
+                            <strong>Maintenance and Development Impact</strong>
+                        </td>
+                        <td style="border:0.5px solid rgb(215, 215, 215);">
+                            {maintenance_and_development_imp}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
                             <strong>Forestry Impact</strong>
                         </td>
                         <td style="border:0.5px solid rgb(215, 215, 215);">
@@ -62,22 +92,6 @@
                     </tr>
                     <tr>
                         <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
-                            <strong>Maintenance and Development Impact</strong>
-                        </td>
-                        <td style="border:0.5px solid rgb(215, 215, 215);">
-                            {maintenance_and_development_imp}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
-                            <strong>Wildlife Habitat Improvement Impact</strong>
-                        </td>
-                        <td style="border:0.5px solid rgb(215, 215, 215);">
-                            {wildlife_habitat_improvement_im}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
                             <strong>Agriculture Impact</strong>
                         </td>
                         <td style="border:0.5px solid rgb(215, 215, 215);">
@@ -90,14 +104,17 @@
     </figure>
 </figure>
 
+###################################
 
 
 
-
-## CONSERVATION TRACKING INFORMATION
-<font size="+1"><strong>Conservation Tracking Information</strong></font><br>
-Common Name: <strong>{scomname}</strong><br>
-Scientific Name: <i>{sname}</i><br>
+####################################
+## CONSERVATION TRACKING INFORMATION - paste into the PGLMT ET popup formatting as HTML text
+<p>
+    <span style="font-size:large;"><strong>{scomname}</strong>&nbsp; </span>&nbsp;
+    <br>
+    <span style="font-size:large;"><i>{sname}</i></span>
+</p>
 <figure>
     <figure style="float:left;width:100%;">
         <figure class="table">
@@ -151,7 +168,7 @@ Scientific Name: <i>{sname}</i><br>
                             {sensitv_sp}
                         </td>
                     </tr>
-                                    <tr>
+                    <tr>
                         <td style="border:0.5px solid rgb(215, 215, 215);width:35%;">
                             <strong>Taxonomic Group</strong>
                         </td>
@@ -172,11 +189,11 @@ Scientific Name: <i>{sname}</i><br>
         </figure>
     </figure>
 </figure>
+################
 
 
-
-
-### FORESTRY BMP
+################
+### FORESTRY BMP - copy/paste into the forestry text popup formatting as HTML text
 <p><font size="+1"><strong>Forestry Best Management Practices <br>
     {forestry__compatibility}</strong></font></p>
 <figure>
@@ -221,7 +238,7 @@ Scientific Name: <i>{sname}</i><br>
                             <strong>Forestry, Erosion and Sedimentation</strong>
                         </td>
                         <td style="border:0.5px solid rgb(215, 215, 215);">
-                            {forestry__erosion_and_sedimentation}
+                            {forestry__erosion_and_sedimenta}
                         </td>
                     </tr>
                     <tr>
@@ -245,16 +262,14 @@ Scientific Name: <i>{sname}</i><br>
         </figure>
     </figure>
 </figure>
+###################
 
 
 
 
 
-
-
-
-
-### Agriculture BMP
+###################
+### Agriculture BMP - copy/paste into the Agriculture BMP table popup formatting as html text
 <p><font size="+1"><strong>Agriculture Best Management Practices <br>
     {agriculture__compatibility}</strong></font></p>
 <figure>
@@ -323,12 +338,12 @@ Scientific Name: <i>{sname}</i><br>
         </figure>
     </figure>
 </figure>
+##########################
 
 
 
-
-
-### FIRE BMP
+#########################
+### FIRE BMP - copy/paste into the fire bmp table popup formatting as html text
 <p><font size="+1"><strong>Fire Best Management Practices <br>
     {fire__compatibility}</strong></font></p>
 <figure>
@@ -365,13 +380,13 @@ Scientific Name: <i>{sname}</i><br>
         </figure>
     </figure>
 </figure>
+###########################
 
 
 
 
-
-
-### Maintenance and Development BMP
+###########################
+### Maintenance and Development BMP - copy/paste into the maintenance and development table popup formatting as html text
 <p><font size="+1"><strong>Maintenance and Development Best Management Practices <br>
     Development: {development__compatibility} <br>
     Maintenance: {maintenance__compatibility} </strong></font></p>
@@ -464,3 +479,235 @@ Scientific Name: <i>{sname}</i><br>
         </figure>
     </figure>
 </figure>
+
+
+
+
+
+
+
+
+###################
+### Federal BMP - copy/paste into the Federal BMP table popup formatting as html text
+<font size="+1"><strong>Federal Best Management Practices </strong></font>
+<figure>
+    <figure style="float:left;width:100%;">
+        <figure class="table">
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
+                            <strong>Conservation Measures (Optional in Core Habitat)</strong>
+                        </td>
+                        <td style="border:0.5px solid rgb(215, 215, 215);">
+                            {Conservation_Measures__Optional}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
+                            <strong>Fire Impacts</strong>
+                        </td>
+                        <td style="border:0.5px solid rgb(215, 215, 215);">
+                            {Fire_Impact}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
+                            <strong>Fire Avoidance Measures</strong>
+                        </td>
+                        <td style="border:0.5px solid rgb(215, 215, 215);">
+                            {Fire_AM}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
+                            <strong>Development Impacts</strong>
+                        </td>
+                        <td style="border:0.5px solid rgb(215, 215, 215);">
+                            {Dev_Impact}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
+                            <strong>Development Avoidance Measures</strong>
+                        </td>
+                        <td style="border:0.5px solid rgb(215, 215, 215);">
+                            {Dev_AM}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
+                            <strong>Maintenance Impacts</strong>
+                        </td>
+                        <td style="border:0.5px solid rgb(215, 215, 215);">
+                            {Main_Impact}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
+                            <strong>Maintenance Avoidance Measures</strong>
+                        </td>
+                        <td style="border:0.5px solid rgb(215, 215, 215);">
+                            {Main_AM}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
+                            <strong>Forestry Impacts</strong>
+                        </td>
+                        <td style="border:0.5px solid rgb(215, 215, 215);">
+                            {For_Impact}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
+                            <strong>Forestry Avoidance Measures</strong>
+                        </td>
+                        <td style="border:0.5px solid rgb(215, 215, 215);">
+                            {For_AM}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
+                            <strong>Agriculture Impacts</strong>
+                        </td>
+                        <td style="border:0.5px solid rgb(215, 215, 215);">
+                            {Ag_Impact}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
+                            <strong>Agriculture Avoidance Measures</strong>
+                        </td>
+                        <td style="border:0.5px solid rgb(215, 215, 215);">
+                            {Ag_AM}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
+                            <strong>Wildlife Habitat Improvement Impacts</strong>
+                        </td>
+                        <td style="border:0.5px solid rgb(215, 215, 215);">
+                            {Whi_Impact}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
+                            <strong>Wildlife Habitat Improvement Avoidance Measures</strong>
+                        </td>
+                        <td style="border:0.5px solid rgb(215, 215, 215);">
+                            {Whi_AM}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </figure>
+    </figure>
+</figure>
+##########################
+
+
+
+
+
+
+###################
+### Wildlife Habitat Improvement BMPs - copy/paste into the WHI BMP table popup formatting as html text
+<p><font size="+1"><strong>Wildlife Habitat Improvement Best Management Practices <br>
+    {Wildlife_Habitat_Improvement__C}</strong></font></p>
+<figure>
+    <figure style="float:left;width:100%;">
+        <figure class="table">
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
+                            <strong>Wildlife Habitat Improvement, General</strong>
+                        </td>
+                        <td style="border:0.5px solid rgb(215, 215, 215);">
+                            {Wildlife_Habitat_Improvement__G}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
+                            <strong>Wildlife Habitat Improvement, Food Plots</strong>
+                        </td>
+                        <td style="border:0.5px solid rgb(215, 215, 215);">
+                            {Wildlife_Habitat_Improvement__F}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
+                            <strong>Wildlife Habitat Improvement, Small-patch Vegetation Management</strong>
+                        </td>
+                        <td style="border:0.5px solid rgb(215, 215, 215);">
+                            {Wildlife_Habitat_Improvement__S}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
+                            <strong>Wildlife Habitat Improvement, Seeding or Revegetation</strong>
+                        </td>
+                        <td style="border:0.5px solid rgb(215, 215, 215);">
+                            {Wildlife_Habitat_Improvement__1}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
+                            <strong>Wildlife Habitat Improvement, Mowing</strong>
+                        </td>
+                        <td style="border:0.5px solid rgb(215, 215, 215);">
+                            {Wildlife_Habitat_Improvement__M}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border:0.5px solid rgb(215, 215, 215);width:15%;">
+                            <strong>Wildlife Habitat Improvement, Overstory Removal</strong>
+                        </td>
+                        <td style="border:0.5px solid rgb(215, 215, 215);">
+                            {Wildlife_Habitat_Improvement__O}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </figure>
+    </figure>
+</figure>
+##########################
+
+
+
+
+
+
+
+
+##########################
+## FEDERAL BATS POPUP - PASTE INTO ARCADE EXPRESSION
+
+if($feature.ELSUBID == 11449){
+  var sname = "Myotis sodalis"
+  var scomname = "Indiana Bat"}
+else if($feature.ELSUBID == 11453){
+  var sname = "Perimyotis subflavus"
+  var scomname = "Tricolored Bat"
+}
+else if($feature.ELSUBID == 11451){
+  var sname = "Myotis septentrionalis"
+  var scomname = "Northern Long-eared Bat"
+}
+else{
+ var sname = "Something went wrong... contact the system administrator."
+ var scomname = "Something went wrong... contact the system administrator."
+}
+
+var result = `<p>
+    <span style="font-size:medium;"><strong>${scomname} (<i>${sname}</i>)</strong></span>
+    <br><br>
+    See HCP if relevant and/or consult with USFWS for conservation opportunities for federal bats located on SGLs.
+</p>`
+
+return {
+  type : "text",
+  text : result
+}
